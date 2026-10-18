@@ -1,0 +1,6 @@
+import {z} from 'zod';
+import {db} from '@/lib/db';
+import {requireAdmin,jsonBody,apiError,HttpError} from '@/lib/auth';
+const input=z.object({slug:z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(100),name:z.string().trim().min(2).max(100),role:z.string().trim().min(2).max(100),group:z.enum(['EXECUTIVE','COACHING','MEDICAL','KIT']),biography:z.string().max(5000).default(''),portraitId:z.uuid().optional(),sortOrder:z.number().int().min(0).max(1000).default(0),status:z.enum(['DRAFT','PUBLISHED']).default('DRAFT')});
+export async function POST(request:Request){try{await requireAdmin(request);const data=input.parse(await jsonBody(request));if(data.portraitId&&!await db().mediaAsset.findFirst({where:{id:data.portraitId,state:'READY',mimeType:{startsWith:'image/'}}}))throw new HttpError(422,'Upload a portrait image first');const staff=await db().staff.create({data});return Response.json({id:staff.id,status:staff.status},{status:201})}catch(e){return apiError(e)}}
+export async function GET(request:Request){try{await requireAdmin(request);return Response.json({staff:await db().staff.findMany({take:100,orderBy:{sortOrder:'asc'},select:{id:true,name:true,role:true,status:true}})},{headers:{'Cache-Control':'no-store'}})}catch(e){return apiError(e)}}

@@ -1,0 +1,6 @@
+import {z} from 'zod';
+import {db} from '@/lib/db';
+import {requireAdmin,jsonBody,apiError,HttpError} from '@/lib/auth';
+const input=z.object({slug:z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(100),name:z.string().trim().min(2).max(100),number:z.number().int().min(1).max(99),position:z.enum(['GOALKEEPER','DEFENDER','MIDFIELDER','FORWARD']),biography:z.string().max(5000).default(''),nationality:z.string().max(80).optional(),heightCm:z.number().int().min(80).max(250).optional(),portraitId:z.uuid().optional()});
+export async function POST(request:Request){try{await requireAdmin(request);const data=input.parse(await jsonBody(request));if(data.portraitId&&!await db().mediaAsset.findFirst({where:{id:data.portraitId,state:'READY',mimeType:{startsWith:'image/'}}}))throw new HttpError(422,'Upload a portrait image first');const p=await db().player.create({data});return Response.json({id:p.id,status:p.status},{status:201})}catch(e){return apiError(e)}}
+export async function GET(request:Request){try{await requireAdmin(request);return Response.json({players:await db().player.findMany({take:100,orderBy:{number:'asc'},select:{id:true,name:true,status:true,number:true}})},{headers:{'Cache-Control':'no-store'}})}catch(e){return apiError(e)}}

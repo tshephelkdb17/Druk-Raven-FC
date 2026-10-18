@@ -1,0 +1,12 @@
+export const positions = ['GOALKEEPER','DEFENDER','MIDFIELDER','FORWARD'] as const;
+export type Position = typeof positions[number];
+export const positionLabels: Record<Position,string> = {GOALKEEPER:'Goalkeepers',DEFENDER:'Defenders',MIDFIELDER:'Midfielders',FORWARD:'Forwards'};
+export const staffGroups = ['EXECUTIVE','COACHING','MEDICAL','KIT'] as const;
+export type StaffGroup = typeof staffGroups[number];
+export const staffLabels: Record<StaffGroup,string> = {EXECUTIVE:'Executive management',COACHING:'Coaching staff',MEDICAL:'Medical team',KIT:'Kit & operations'};
+export const categories = ['HIGHLIGHTS','TRAINING','INTERVIEWS','CLUB'] as const;
+export type VideoCategory = typeof categories[number];
+export type GalleryPhoto = {id:string; url:string; alt:string; caption:string};
+export type PlayerView = {id:string; slug:string; name:string; number:number; position:Position; portrait:string|null; biography:string; nationality:string|null; heightCm:number|null; dateOfBirth:string|null; goals:number; assists:number; gallery:GalleryPhoto[]};
+export type StaffView = {id:string; slug:string; name:string; role:string; group:StaffGroup; portrait:string|null; biography:string};
+export type VideoView = {id:string; slug:string; title:string; description:string; category:VideoCategory; thumbnail:string; durationSeconds:number; source:'UPLOAD'|'YOUTUBE'|'VIMEO'; url:string|null; providerId:string|null};

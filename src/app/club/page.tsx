@@ -1,0 +1,2 @@
+import {PageHeading} from '@/components/page-heading';
+export default function Page(){return <div className="shell min-h-[65vh]"><PageHeading eyebrow="Druk Raven Football Club" title="One club. One community." description="Druk Raven Football Club. The players, the supporters and the moments that bring us together."/><img src="/images/team_photo1.jpeg" alt="Druk Raven Football Club team" className="w-full object-cover"/></div>}

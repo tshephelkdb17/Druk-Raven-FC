@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client"
+  output = "../src/generated/prisma"
+}
+datasource db {
+  provider = "postgresql"
+  schemas = ["club"]
+}
+enum Position {
+  GOALKEEPER
+  DEFENDER
+  MIDFIELDER
+  FORWARD
+  @@schema("club")
+}
+enum StaffGroup {
+  EXECUTIVE
+  COACHING
+  MEDICAL
+  KIT
+  @@schema("club")
+}
+enum Publication {
+  DRAFT
+  PUBLISHED
+  @@schema("club")
+}
+enum GallerySlot {
+  ONE
+  TWO
+  THREE
+  @@schema("club")
+}
+enum MediaState {
+  PENDING
+  READY
+  REJECTED
+  @@schema("club")
+}
+enum VideoSource {
+  UPLOAD
+  YOUTUBE
+  VIMEO
+  @@schema("club")
+}
+enum VideoCategory {
+  HIGHLIGHTS
+  TRAINING
+  INTERVIEWS
+  CLUB
+  @@schema("club")
+}
+model Admin {
+  userId String @id @db.Uuid
+  createdAt DateTime @default(now())
+  @@schema("club")
+}
+model MediaAsset {
+  id String @id @default(uuid()) @db.Uuid
+  objectKey String @unique
+  mimeType String
+  bytes Int
+  state MediaState @default(PENDING)
+  createdBy String @db.Uuid
+  createdAt DateTime @default(now())
+  playerPortraits Player[]
+  staffPortraits Staff[]
+  galleryImages PlayerGalleryImage[]
+  videos Video[] @relation("VideoFile")
+  thumbnails Video[] @relation("VideoThumbnail")
+  @@index([state, createdAt])
+  @@schema("club")
+}
+model Player {
+  id String @id @default(uuid()) @db.Uuid
+  legacyId String? @unique @db.Uuid
+  slug String @unique
+  name String
+  number Int @unique
+  position Position
+  nationality String?
+  dateOfBirth DateTime? @db.Date
+  heightCm Int?
+  biography String @default("")
+  portraitId String? @db.Uuid
+  portrait MediaAsset? @relation(fields: [portraitId], references: [id], onDelete: Restrict)
+  gallery PlayerGalleryImage[]
+  contributions PlayerMatchStat[]
+  status Publication @default(DRAFT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, position, number])
+  @@schema("club")
+}
+model PlayerGalleryImage {
+  id String @id @default(uuid()) @db.Uuid
+  playerId String @db.Uuid
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  assetId String @db.Uuid
+  asset MediaAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  slot GallerySlot
+  alt String
+  caption String @default("")
+  @@unique([playerId, slot])
+  @@unique([playerId, assetId])
+  @@schema("club")
+}
+model Staff {
+  id String @id @default(uuid()) @db.Uuid
+  slug String @unique
+  name String
+  role String
+  group StaffGroup
+  biography String @default("")
+  portraitId String? @db.Uuid
+  portrait MediaAsset? @relation(fields: [portraitId], references: [id], onDelete: Restrict)
+  sortOrder Int @default(0)
+  status Publication @default(DRAFT)
+  updatedAt DateTime @updatedAt
+  @@index([status, group, sortOrder])
+  @@schema("club")
+}
+model Video {
+  id String @id @default(uuid()) @db.Uuid
+  slug String @unique
+  title String
+  description String
+  category VideoCategory
+  source VideoSource
+  providerId String?
+  assetId String? @db.Uuid
+  asset MediaAsset? @relation("VideoFile", fields: [assetId], references: [id], onDelete: Restrict)
+  thumbnailId String @db.Uuid
+  thumbnail MediaAsset @relation("VideoThumbnail", fields: [thumbnailId], references: [id], onDelete: Restrict)
+  durationSeconds Int
+  status Publication @default(DRAFT)
+  publishedAt DateTime?
+  createdBy String @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, publishedAt, id])
+  @@index([status, category, publishedAt])
+  @@schema("club")
+}
+model Match {
+  id String @id @default(uuid()) @db.Uuid
+  legacyId String? @unique @db.Uuid
+  opponent String
+  kickoff DateTime
+  venue String
+  competition String
+  season String
+  home Boolean
+  finished Boolean @default(false)
+  goalsFor Int?
+  goalsAgainst Int?
+  contributions PlayerMatchStat[]
+  @@index([kickoff, id])
+  @@schema("club")
+}
+model PlayerMatchStat {
+  playerId String @db.Uuid
+  matchId String @db.Uuid
+  player Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  goals Int @default(0)
+  assists Int @default(0)
+  @@id([playerId, matchId])
+  @@index([matchId])
+  @@schema("club")
+}
